@@ -6,3 +6,5 @@ DJ Capuchino es una app de musica basada en Echo Music, renombrada para Jershon 
 - Paquete: com.jershonzablov.djcapuchino
 
 Build trigger 2.
+
+Build trigger 3.
