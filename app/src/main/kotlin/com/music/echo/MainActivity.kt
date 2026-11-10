@@ -32,6 +32,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -505,12 +508,44 @@ class MainActivity : ComponentActivity() {
     }
 
     setContent {
-      echomusicApp(
-        playerConnection = playerConnection,
-        database = database,
-        downloadUtil = downloadUtil,
-        syncUtils = syncUtils,
-      )
+      var showSplash by remember { mutableStateOf(true) }
+      LaunchedEffect(Unit) {
+        delay(8000L)
+        showSplash = false
+      }
+      Box(Modifier.fillMaxSize()) {
+        echomusicApp(
+          playerConnection = playerConnection,
+          database = database,
+          downloadUtil = downloadUtil,
+          syncUtils = syncUtils,
+        )
+        if (showSplash) {
+          Box(
+            Modifier.fillMaxSize().background(Color.Black).clickable { showSplash = false },
+            contentAlignment = Alignment.Center
+          ) {
+            Column(
+              horizontalAlignment = Alignment.CenterHorizontally,
+              modifier = Modifier.fillMaxWidth().padding(32.dp)
+            ) {
+              Image(
+                painter = painterResource(R.drawable.splash_logo),
+                contentDescription = "DJ Capuchino",
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
+              )
+              Text(
+                text = "DJ Capuchino Music",
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 24.dp)
+              )
+            }
+          }
+        }
+      }
     }
   }
 
