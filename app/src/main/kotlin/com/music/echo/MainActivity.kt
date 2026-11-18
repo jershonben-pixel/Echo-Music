@@ -9,10 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.provider.Settings
 import android.util.Log
-import echo.music.iad1tya.echomusic.AudioDeviceBottomSheet
-import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -58,7 +55,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialogDefaults
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -86,6 +82,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -142,6 +139,7 @@ import com.music.innertube.models.SongItem
 import com.music.innertube.models.WatchEndpoint
 import com.valentinilk.shimmer.LocalShimmerTheme
 import dagger.hilt.android.AndroidEntryPoint
+import echo.music.iad1tya.ai.AiRecommendationHelper
 import echo.music.iad1tya.constants.*
 import echo.music.iad1tya.constants.AiRecommendationsKey
 import echo.music.iad1tya.constants.AppBarHeight
@@ -153,6 +151,8 @@ import echo.music.iad1tya.constants.DynamicThemeKey
 import echo.music.iad1tya.constants.EnableHighRefreshRateKey
 import echo.music.iad1tya.constants.FloatingToolbarBottomPadding
 import echo.music.iad1tya.constants.FloatingToolbarHorizontalPadding
+import echo.music.iad1tya.constants.IsMonochromeThemeKey
+import echo.music.iad1tya.constants.LastAiRecommendationUpdateDayKey
 import echo.music.iad1tya.constants.LiquidGlassBlurRadiusKey
 import echo.music.iad1tya.constants.LiquidGlassChromaticAberrationKey
 import echo.music.iad1tya.constants.LiquidGlassDepthEffectKey
@@ -176,7 +176,6 @@ import echo.music.iad1tya.constants.NavigationBarHeight
 import echo.music.iad1tya.constants.PauseListenHistoryKey
 import echo.music.iad1tya.constants.PauseSearchHistoryKey
 import echo.music.iad1tya.constants.PureBlackKey
-import echo.music.iad1tya.constants.IsMonochromeThemeKey
 import echo.music.iad1tya.constants.SYSTEM_DEFAULT
 import echo.music.iad1tya.constants.SelectedThemeColorKey
 import echo.music.iad1tya.constants.StopMusicOnTaskClearKey
@@ -184,6 +183,7 @@ import echo.music.iad1tya.constants.UseFloatingNavBarKey
 import echo.music.iad1tya.constants.UseNewMiniPlayerDesignKey
 import echo.music.iad1tya.db.MusicDatabase
 import echo.music.iad1tya.db.entities.SearchHistory
+import echo.music.iad1tya.echomusic.AudioDeviceBottomSheet
 import echo.music.iad1tya.echomusic.UpdateNotificationHelper
 import echo.music.iad1tya.echomusic.updater.checkForUpdate
 import echo.music.iad1tya.echomusic.updater.getAutoUpdateCheckSetting
@@ -195,6 +195,7 @@ import echo.music.iad1tya.playback.DownloadUtil
 import echo.music.iad1tya.playback.MusicService
 import echo.music.iad1tya.playback.MusicService.MusicBinder
 import echo.music.iad1tya.playback.PlayerConnection
+import echo.music.iad1tya.playback.queues.ListQueue
 import echo.music.iad1tya.playback.queues.YouTubeQueue
 import echo.music.iad1tya.ui.component.*
 import echo.music.iad1tya.ui.component.AppFloatingNavBar
@@ -224,21 +225,13 @@ import echo.music.iad1tya.ui.utils.appBarScrollBehavior
 import echo.music.iad1tya.ui.utils.resetHeightOffset
 import echo.music.iad1tya.utils.SyncUtils
 import echo.music.iad1tya.utils.dataStore
-import echo.music.iad1tya.ai.AiRecommendationHelper
-import echo.music.iad1tya.constants.AiRecommendationsKey
-import echo.music.iad1tya.constants.LastAiRecommendationUpdateDayKey
-import echo.music.iad1tya.constants.CreateFromTasteDailyKey
-import echo.music.iad1tya.constants.LastCreateFromTasteUpdateDayKey
-import androidx.datastore.preferences.core.edit
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import echo.music.iad1tya.utils.get
 import echo.music.iad1tya.utils.onlinePlaylistRoute
-import echo.music.iad1tya.utils.validOnlinePlaylistId
 import echo.music.iad1tya.utils.rememberEnumPreference
 import echo.music.iad1tya.utils.rememberPreference
 import echo.music.iad1tya.utils.reportException
 import echo.music.iad1tya.utils.setAppLocale
+import echo.music.iad1tya.utils.validOnlinePlaylistId
 import echo.music.iad1tya.viewmodels.HomeViewModel
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -249,6 +242,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -266,6 +260,7 @@ val EmphasizedEasing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
   companion object {
+    private const val EXTRA_VOICE_REQUEST_HANDLED = "echo.music.voice_request_handled"
     const val ACTION_SEARCH = "echo.music.iad1tya.action.SEARCH"
     const val ACTION_LIBRARY = "echo.music.iad1tya.action.LIBRARY"
     const val ACTION_RECOGNITION = "echo.music.iad1tya.action.RECOGNITION"
@@ -292,6 +287,9 @@ class MainActivity : ComponentActivity() {
   private var pendingIntent: Intent? = null
 
   private var playerConnection by mutableStateOf<PlayerConnection?>(null)
+
+  /** Voice requests seen so far; only the latest one may start playback. */
+  private var voiceRequestCount = 0
 
   private val serviceConnection =
     object : ServiceConnection {
@@ -339,7 +337,7 @@ class MainActivity : ComponentActivity() {
         ActivityCompat.requestPermissions(
           this,
           arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-          1000
+          1000,
         )
       }
     }
@@ -430,7 +428,8 @@ class MainActivity : ComponentActivity() {
     }
 
     lifecycleScope.launch {
-      val aiRecommendationsEnabled = dataStore.data.map { it[AiRecommendationsKey] ?: false }.first()
+      val aiRecommendationsEnabled =
+        dataStore.data.map { it[AiRecommendationsKey] ?: false }.first()
       if (aiRecommendationsEnabled) {
         val lastUpdate = dataStore.data.map { it[LastAiRecommendationUpdateDayKey] ?: 0L }.first()
         val currentDay = System.currentTimeMillis() / (1000 * 60 * 60 * 24)
@@ -462,7 +461,8 @@ class MainActivity : ComponentActivity() {
     }
 
     lifecycleScope.launch {
-      val aiRecommendationsEnabled = dataStore.data.map { it[AiRecommendationsKey] ?: false }.first()
+      val aiRecommendationsEnabled =
+        dataStore.data.map { it[AiRecommendationsKey] ?: false }.first()
       if (aiRecommendationsEnabled) {
         val lastUpdate = dataStore.data.map { it[LastAiRecommendationUpdateDayKey] ?: 0L }.first()
         val currentDay = System.currentTimeMillis() / (1000 * 60 * 60 * 24)
@@ -482,27 +482,31 @@ class MainActivity : ComponentActivity() {
         }
         .distinctUntilChanged()
         .collectLatest { enabled ->
-          val workManager = androidx.work.WorkManager.getInstance(this@MainActivity)
-          if (enabled) {
-            val request =
-              androidx.work
-                .PeriodicWorkRequestBuilder<echo.music.iad1tya.ai.AiRecommendationWorker>(
-                  1,
-                  java.util.concurrent.TimeUnit.DAYS
-                )
-                .setConstraints(
-                  androidx.work.Constraints.Builder()
-                    .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
-                    .build()
-                )
-                .build()
-            workManager.enqueueUniquePeriodicWork(
-              "AiRecommendationWorker",
-              androidx.work.ExistingPeriodicWorkPolicy.KEEP,
-              request
-            )
-          } else {
-            workManager.cancelUniqueWork("AiRecommendationWorker")
+          try {
+            val workManager = androidx.work.WorkManager.getInstance(this@MainActivity)
+            if (enabled) {
+              val request =
+                androidx.work
+                  .PeriodicWorkRequestBuilder<echo.music.iad1tya.ai.AiRecommendationWorker>(
+                    1,
+                    java.util.concurrent.TimeUnit.DAYS,
+                  )
+                  .setConstraints(
+                    androidx.work.Constraints.Builder()
+                      .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                      .build()
+                  )
+                  .build()
+              workManager.enqueueUniquePeriodicWork(
+                "AiRecommendationWorker",
+                androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+                request,
+              )
+            } else {
+              workManager.cancelUniqueWork("AiRecommendationWorker")
+            }
+          } catch (e: Exception) {
+            Timber.e(e, "Failed to update AiRecommendationWorker schedule")
           }
         }
     }
@@ -628,7 +632,7 @@ class MainActivity : ComponentActivity() {
             val currentVersion = BuildConfig.VERSION_NAME
             Log.d(
               "UpdateCheck",
-              "Startup check success. Latest: $latestVersion, Current: $currentVersion, isAvailable: $isAvailable"
+              "Startup check success. Latest: $latestVersion, Current: $currentVersion, isAvailable: $isAvailable",
             )
             saveUpdateAvailableState(context, isAvailable)
 
@@ -644,7 +648,7 @@ class MainActivity : ComponentActivity() {
               UpdateNotificationHelper.showUpdateNotification(context, latestVersion)
             }
           },
-          onError = { Log.e("UpdateCheck", "Startup check failed") }
+          onError = { Log.e("UpdateCheck", "Startup check failed") },
         )
       }
     }
@@ -662,7 +666,7 @@ class MainActivity : ComponentActivity() {
             android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU ||
               androidx.core.content.ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.POST_NOTIFICATIONS
+                android.Manifest.permission.POST_NOTIFICATIONS,
               ) == android.content.pm.PackageManager.PERMISSION_GRANTED
           ) {
 
@@ -675,7 +679,7 @@ class MainActivity : ComponentActivity() {
                 android.app.NotificationChannel(
                   channelId,
                   "Birthday",
-                  android.app.NotificationManager.IMPORTANCE_HIGH
+                  android.app.NotificationManager.IMPORTANCE_HIGH,
                 )
               notificationManager.createNotificationChannel(channel)
             }
@@ -683,7 +687,7 @@ class MainActivity : ComponentActivity() {
             val bitmap =
               android.graphics.BitmapFactory.decodeResource(
                 context.resources,
-                R.drawable.birthday_image
+                R.drawable.birthday_image,
               )
 
             val notification =
@@ -812,7 +816,7 @@ class MainActivity : ComponentActivity() {
           version = availableUpdateVersion,
           changelog = availableUpdateChangelog,
           description = availableUpdateDescription,
-          onDismiss = { showUpdateDialog = false }
+          onDismiss = { showUpdateDialog = false },
         )
       } else {
         whatsNewInfo?.let { info ->
@@ -825,7 +829,7 @@ class MainActivity : ComponentActivity() {
                 BuildConfig.VERSION_NAME,
               )
               whatsNewInfo = null
-            }
+            },
           )
         }
       }
@@ -863,6 +867,13 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(blockedArtists) {
           com.music.innertube.YouTube.blockedArtists = blockedArtists
         }
+        val dislikedSongs by
+          dataStore.data
+            .map { it[DislikedSongsKey] ?: emptySet() }
+            .collectAsState(initial = emptySet())
+        LaunchedEffect(dislikedSongs) {
+          com.music.innertube.YouTube.dislikedSongs = dislikedSongs
+        }
         val homeViewModel: HomeViewModel = hiltViewModel()
         val accountImageUrl by homeViewModel.accountImageUrl.collectAsState()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -885,8 +896,7 @@ class MainActivity : ComponentActivity() {
           }
         val (useNewMiniPlayerDesign) =
           rememberPreference(UseNewMiniPlayerDesignKey, defaultValue = true)
-        val (musicFlowEnabled) =
-          rememberPreference(MusicFlowEnabledKey, defaultValue = true)
+        val (musicFlowEnabled) = rememberPreference(MusicFlowEnabledKey, defaultValue = true)
         val defaultOpenTab = remember {
           dataStore[DefaultOpenTabKey].toEnum(defaultValue = NavigationTab.HOME)
         }
@@ -941,13 +951,15 @@ class MainActivity : ComponentActivity() {
               currentRoute!!.startsWith("online_playlist/") ||
               currentRoute!!.startsWith("local_playlist/") ||
               currentRoute!!.startsWith("spotify_playlist/") ||
+              currentRoute!!.startsWith("auto_playlist/") ||
+              currentRoute!!.startsWith("cache_playlist/") ||
+              currentRoute!!.startsWith("top_playlist/") ||
+              currentRoute!!.startsWith("bottom_playlist/") ||
               currentRoute!!.startsWith("artist/")
           }
 
-        val isLandscape = configuration.containerDpSize.width > configuration.containerDpSize.height
-
-        val showRail =
-          isLandscape && !inSearchScreen && currentRoute != "ambient_mode" && currentRoute != "music_flow" && currentRoute != "wrapped" && currentRoute != "podcast_video"
+        // Unified floating pill navigation toolbar across both portrait and landscape views
+        val showRail = false
 
         val navPadding =
           if (shouldShowNavigationBar && !showRail) {
@@ -1087,7 +1099,7 @@ class MainActivity : ComponentActivity() {
             canScroll = {
               !inSearchScreen &&
                 (playerBottomSheetState.isCollapsed || playerBottomSheetState.isDismissed)
-            },
+            }
           )
 
         LaunchedEffect(navBackStackEntry) {
@@ -1188,7 +1200,9 @@ class MainActivity : ComponentActivity() {
           val listener =
             Consumer<Intent> { newIntent ->
               handleWidgetAction(newIntent)
-              if (newIntent.action == Intent.ACTION_VIEW || newIntent.action == Intent.ACTION_SEND) {
+              if (
+                newIntent.action == Intent.ACTION_VIEW || newIntent.action == Intent.ACTION_SEND
+              ) {
                 handleDeepLinkIntent(newIntent, navController)
               } else if (newIntent.action == ACTION_RECOGNITION) {
                 handleRecognitionIntent(newIntent, navController)
@@ -1309,7 +1323,8 @@ class MainActivity : ComponentActivity() {
             }
           }
 
-        val expandPlayer = remember(playerBottomSheetState) { { playerBottomSheetState.expandSoft() } }
+        val expandPlayer =
+          remember(playerBottomSheetState) { { playerBottomSheetState.expandSoft() } }
         CompositionLocalProvider(
           LocalHapticFeedback provides customHapticFeedback,
           LocalGlassEffectConfig provides glassEffectConfig,
@@ -1332,7 +1347,7 @@ class MainActivity : ComponentActivity() {
               AnimatedVisibility(
                 visible = shouldShowTopBar,
                 enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 200))
+                exit = fadeOut(animationSpec = tween(durationMillis = 200)),
               ) {
                 Row {
                   TopAppBar(
@@ -1342,7 +1357,7 @@ class MainActivity : ComponentActivity() {
                         style =
                           MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp
+                            fontSize = 24.sp,
                           ),
                       )
                     },
@@ -1351,14 +1366,14 @@ class MainActivity : ComponentActivity() {
                         IconButton(onClick = { navController.navigate("history") }) {
                           Icon(
                             painter = painterResource(R.drawable.music_history),
-                            contentDescription = stringResource(R.string.history)
+                            contentDescription = stringResource(R.string.history),
                           )
                         }
                       }
                       IconButton(onClick = { navController.navigate("stats") }) {
                         Icon(
                           painter = painterResource(R.drawable.stats),
-                          contentDescription = stringResource(R.string.stats)
+                          contentDescription = stringResource(R.string.stats),
                         )
                       }
                       if (listenTogetherInTopBar) {
@@ -1367,65 +1382,71 @@ class MainActivity : ComponentActivity() {
                         ) {
                           Icon(
                             painter = painterResource(R.drawable.group_outlined),
-                            contentDescription = stringResource(R.string.together)
+                            contentDescription = stringResource(R.string.together),
                           )
                         }
                       }
                       IconButton(onClick = { showSettingDialoge = true }) {
-                        val profileRingTransition = rememberInfiniteTransition(label = "TopBarProfileRing")
-                        val profileRingAngle by profileRingTransition.animateFloat(
-                          initialValue = 0f,
-                          targetValue = 360f,
-                          animationSpec = infiniteRepeatable(
-                            animation = tween(12000, easing = LinearEasing),
-                            repeatMode = RepeatMode.Restart
-                          ),
-                          label = "profileRingAngle"
-                        )
-                        val profileRingAlpha by profileRingTransition.animateFloat(
-                          initialValue = 0.65f,
-                          targetValue = 1f,
-                          animationSpec = infiniteRepeatable(
-                            animation = tween(2400, easing = FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Reverse
-                          ),
-                          label = "profileRingAlpha"
-                        )
+                        val profileRingTransition =
+                          rememberInfiniteTransition(label = "TopBarProfileRing")
+                        val profileRingAngle by
+                          profileRingTransition.animateFloat(
+                            initialValue = 0f,
+                            targetValue = 360f,
+                            animationSpec =
+                              infiniteRepeatable(
+                                animation = tween(12000, easing = LinearEasing),
+                                repeatMode = RepeatMode.Restart,
+                              ),
+                            label = "profileRingAngle",
+                          )
+                        val profileRingAlpha by
+                          profileRingTransition.animateFloat(
+                            initialValue = 0.65f,
+                            targetValue = 1f,
+                            animationSpec =
+                              infiniteRepeatable(
+                                animation = tween(2400, easing = FastOutSlowInEasing),
+                                repeatMode = RepeatMode.Reverse,
+                              ),
+                            label = "profileRingAlpha",
+                          )
                         Box(
                           modifier = Modifier.size(34.dp),
-                          contentAlignment = Alignment.Center
+                          contentAlignment = Alignment.Center,
                         ) {
                           // Light Red Story / Wrapped Ring with slight gentle animation
                           Box(
-                            modifier = Modifier
-                              .fillMaxSize()
-                              .rotate(profileRingAngle)
-                              .border(
-                                width = 2.dp,
-                                brush = Brush.sweepGradient(
-                                  listOf(
-                                    Color(0xFFFF5252).copy(alpha = profileRingAlpha),
-                                    Color(0xFFFF7A8A).copy(alpha = profileRingAlpha * 0.85f),
-                                    Color(0xFFFF8E9E).copy(alpha = profileRingAlpha),
-                                    Color(0xFFFF6B6B).copy(alpha = profileRingAlpha * 0.9f),
-                                    Color(0xFFFF5252).copy(alpha = profileRingAlpha)
-                                  )
-                                ),
-                                shape = CircleShape
-                              )
+                            modifier =
+                              Modifier.fillMaxSize()
+                                .rotate(profileRingAngle)
+                                .border(
+                                  width = 2.dp,
+                                  brush =
+                                    Brush.sweepGradient(
+                                      listOf(
+                                        Color(0xFFFF5252).copy(alpha = profileRingAlpha),
+                                        Color(0xFFFF7A8A).copy(alpha = profileRingAlpha * 0.85f),
+                                        Color(0xFFFF8E9E).copy(alpha = profileRingAlpha),
+                                        Color(0xFFFF6B6B).copy(alpha = profileRingAlpha * 0.9f),
+                                        Color(0xFFFF5252).copy(alpha = profileRingAlpha),
+                                      )
+                                    ),
+                                  shape = CircleShape,
+                                )
                           )
                           if (accountImageUrl != null) {
                             AsyncImage(
                               model = accountImageUrl,
                               contentDescription = stringResource(R.string.account),
-                              modifier = Modifier.size(24.dp).clip(CircleShape)
+                              modifier = Modifier.size(24.dp).clip(CircleShape),
                             )
                           } else {
                             Icon(
                               painter = painterResource(R.drawable.settings),
                               contentDescription = stringResource(R.string.account),
                               modifier = Modifier.size(18.dp),
-                              tint = MaterialTheme.colorScheme.onSurface
+                              tint = MaterialTheme.colorScheme.onSurface,
                             )
                           }
                         }
@@ -1438,7 +1459,7 @@ class MainActivity : ComponentActivity() {
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                         titleContentColor = MaterialTheme.colorScheme.onSurface,
                         actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                       ),
                     windowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top),
                     modifier =
@@ -1449,7 +1470,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                           cutoutInsets.only(WindowInsetsSides.Start + WindowInsetsSides.End)
                         }
-                      )
+                      ),
                   )
                 }
               }
@@ -1460,23 +1481,26 @@ class MainActivity : ComponentActivity() {
                   navController,
                   coroutineScope,
                   topAppBarScrollBehavior,
-                  playerBottomSheetState
+                  playerBottomSheetState,
                 ) {
                   { screen: Screens, isSelected: Boolean ->
                     if (playerBottomSheetState.isExpanded) {
                       playerBottomSheetState.collapseSoft()
                     }
 
-                    if (isSelected) {
+                    if (isSelected && navController.currentDestination?.route == screen.route) {
                       navController.currentBackStackEntry
                         ?.savedStateHandle
                         ?.set("scrollToTop", true)
                       coroutineScope.launch { topAppBarScrollBehavior.state.resetHeightOffset() }
                     } else {
-                      navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                      val popped = navController.popBackStack(screen.route, inclusive = false)
+                      if (!popped) {
+                        navController.navigate(screen.route) {
+                          popUpTo(navController.graph.startDestinationId) { saveState = true }
+                          launchSingleTop = true
+                          restoreState = true
+                        }
                       }
                     }
                   }
@@ -1552,14 +1576,14 @@ class MainActivity : ComponentActivity() {
                                   hiddenOffset * (1 - navBarHeightPx / NavigationBarHeight.toPx())
                                 slideOffset + hideOffset
                               }
-                          }
+                          },
                     )
                   } else {
                     Box(
                       modifier =
                         Modifier.align(Alignment.BottomCenter)
                           .height(navSlideDistance)
-                          .offset(y = navOffsetY),
+                          .offset(y = navOffsetY)
                     ) {
                       FloatingNavigationToolbar(
                         items = navigationItems,
@@ -1597,7 +1621,7 @@ class MainActivity : ComponentActivity() {
                               end = FloatingToolbarHorizontalPadding,
                               bottom = bottomInset + FloatingToolbarBottomPadding,
                             )
-                            .height(NavigationBarHeight)
+                            .height(NavigationBarHeight),
                       )
                     }
 
@@ -1676,7 +1700,7 @@ class MainActivity : ComponentActivity() {
                   } else {
                     Modifier
                   }
-                )
+                ),
           ) {
             Row(Modifier.fillMaxSize()) {
               val onRailItemClick: (Screens, Boolean) -> Unit =
@@ -1684,23 +1708,26 @@ class MainActivity : ComponentActivity() {
                   navController,
                   coroutineScope,
                   topAppBarScrollBehavior,
-                  playerBottomSheetState
+                  playerBottomSheetState,
                 ) {
                   { screen: Screens, isSelected: Boolean ->
                     if (playerBottomSheetState.isExpanded) {
                       playerBottomSheetState.collapseSoft()
                     }
 
-                    if (isSelected) {
+                    if (isSelected && navController.currentDestination?.route == screen.route) {
                       navController.currentBackStackEntry
                         ?.savedStateHandle
                         ?.set("scrollToTop", true)
                       coroutineScope.launch { topAppBarScrollBehavior.state.resetHeightOffset() }
                     } else {
-                      navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                      val popped = navController.popBackStack(screen.route, inclusive = false)
+                      if (!popped) {
+                        navController.navigate(screen.route) {
+                          popUpTo(navController.graph.startDestinationId) { saveState = true }
+                          launchSingleTop = true
+                          restoreState = true
+                        }
                       }
                     }
                   }
@@ -1729,7 +1756,7 @@ class MainActivity : ComponentActivity() {
                     navController.navigate("settings/ai") { launchSingleTop = true }
                   },
                   aiHubIconRes = R.drawable.ai_pfp,
-                  aiHubContentDescription = stringResource(R.string.ai_lyrics_translation)
+                  aiHubContentDescription = stringResource(R.string.ai_lyrics_translation),
                 )
               }
               Box(Modifier.weight(1f)) {
@@ -1742,10 +1769,12 @@ class MainActivity : ComponentActivity() {
                       else -> Screens.Home
                     }.route,
                   enterTransition = {
-                    val currentRouteIndex =
-                      navigationItems.indexOfFirst { it.route == targetState.destination.route }
-                    val previousRouteIndex =
-                      navigationItems.indexOfFirst { it.route == initialState.destination.route }
+                    val currentRouteIndex = navigationItems.indexOfFirst {
+                      it.route == targetState.destination.route
+                    }
+                    val previousRouteIndex = navigationItems.indexOfFirst {
+                      it.route == initialState.destination.route
+                    }
 
                     if (currentRouteIndex == -1 || currentRouteIndex > previousRouteIndex)
                       slideInHorizontally(animationSpec = tween(400, easing = EmphasizedEasing)) {
@@ -1757,10 +1786,12 @@ class MainActivity : ComponentActivity() {
                       } + fadeIn(tween(400, easing = EmphasizedEasing))
                   },
                   exitTransition = {
-                    val currentRouteIndex =
-                      navigationItems.indexOfFirst { it.route == initialState.destination.route }
-                    val targetRouteIndex =
-                      navigationItems.indexOfFirst { it.route == targetState.destination.route }
+                    val currentRouteIndex = navigationItems.indexOfFirst {
+                      it.route == initialState.destination.route
+                    }
+                    val targetRouteIndex = navigationItems.indexOfFirst {
+                      it.route == targetState.destination.route
+                    }
 
                     if (targetRouteIndex == -1 || targetRouteIndex > currentRouteIndex)
                       slideOutHorizontally(animationSpec = tween(400, easing = EmphasizedEasing)) {
@@ -1772,10 +1803,12 @@ class MainActivity : ComponentActivity() {
                       } + fadeOut(tween(400, easing = EmphasizedEasing))
                   },
                   popEnterTransition = {
-                    val currentRouteIndex =
-                      navigationItems.indexOfFirst { it.route == targetState.destination.route }
-                    val previousRouteIndex =
-                      navigationItems.indexOfFirst { it.route == initialState.destination.route }
+                    val currentRouteIndex = navigationItems.indexOfFirst {
+                      it.route == targetState.destination.route
+                    }
+                    val previousRouteIndex = navigationItems.indexOfFirst {
+                      it.route == initialState.destination.route
+                    }
 
                     if (previousRouteIndex != -1 && previousRouteIndex < currentRouteIndex)
                       slideInHorizontally(animationSpec = tween(400, easing = EmphasizedEasing)) {
@@ -1787,10 +1820,12 @@ class MainActivity : ComponentActivity() {
                       } + fadeIn(tween(400, easing = EmphasizedEasing))
                   },
                   popExitTransition = {
-                    val currentRouteIndex =
-                      navigationItems.indexOfFirst { it.route == initialState.destination.route }
-                    val targetRouteIndex =
-                      navigationItems.indexOfFirst { it.route == targetState.destination.route }
+                    val currentRouteIndex = navigationItems.indexOfFirst {
+                      it.route == initialState.destination.route
+                    }
+                    val targetRouteIndex = navigationItems.indexOfFirst {
+                      it.route == targetState.destination.route
+                    }
 
                     if (currentRouteIndex != -1 && currentRouteIndex < targetRouteIndex)
                       slideOutHorizontally(animationSpec = tween(400, easing = EmphasizedEasing)) {
@@ -1803,13 +1838,13 @@ class MainActivity : ComponentActivity() {
                   },
                   modifier =
                     Modifier.layerBackdrop(appBackdrop)
-                      .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
+                      .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
                 ) {
                   navigationBuilder(
                     navController = navController,
                     scrollBehavior = topAppBarScrollBehavior,
                     activity = this@MainActivity,
-                    snackbarHostState = snackbarHostState
+                    snackbarHostState = snackbarHostState,
                   )
                 }
               }
@@ -1818,18 +1853,16 @@ class MainActivity : ComponentActivity() {
 
           BottomSheetMenu(
             state = LocalMenuState.current,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
           )
 
           BottomSheetPage(
             state = LocalBottomSheetPageState.current,
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
           )
 
           if (showAudioDeviceBottomSheet) {
-            AudioDeviceBottomSheet(
-              onDismiss = { showAudioDeviceBottomSheet = false }
-            )
+            AudioDeviceBottomSheet(onDismiss = { showAudioDeviceBottomSheet = false })
           }
 
           sharedSong?.let { song ->
@@ -1844,9 +1877,7 @@ class MainActivity : ComponentActivity() {
                   color = AlertDialogDefaults.containerColor,
                   tonalElevation = AlertDialogDefaults.TonalElevation,
                 ) {
-                  Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                  ) {
+                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     YouTubeSongMenu(
                       song = song,
                       navController = navController,
@@ -1867,7 +1898,7 @@ class MainActivity : ComponentActivity() {
             onResolveStreamUrl = { ringtoneViewModel.getStreamUrl(this@MainActivity, it) },
             onConfirm = { start, end ->
               ringtoneViewModel.setAsRingtone(this@MainActivity, start, end)
-            }
+            },
           )
 
           if (ringtoneUiState.showProgress) {
@@ -1878,7 +1909,7 @@ class MainActivity : ComponentActivity() {
               isComplete = ringtoneUiState.isComplete,
               isSuccess = ringtoneUiState.isSuccess,
               onDismiss = { ringtoneViewModel.dismissProgress() },
-              onOpenSettings = { ringtoneViewModel.openRingtoneSettings(this@MainActivity) }
+              onOpenSettings = { ringtoneViewModel.openRingtoneSettings(this@MainActivity) },
             )
           }
 
@@ -1889,7 +1920,7 @@ class MainActivity : ComponentActivity() {
                 showSettingDialoge = false
                 navController.navigate(route)
               },
-              homeViewModel = homeViewModel
+              homeViewModel = homeViewModel,
             )
           }
 
@@ -1922,7 +1953,7 @@ class MainActivity : ComponentActivity() {
                   spread = 60,
                   colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
                   emitter = Emitter(duration = 300, TimeUnit.MILLISECONDS).max(300),
-                  position = Position.Relative(0.5, 1.0)
+                  position = Position.Relative(0.5, 1.0),
                 ),
                 Party(
                   speed = 30f,
@@ -1932,7 +1963,7 @@ class MainActivity : ComponentActivity() {
                   spread = 45,
                   colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
                   emitter = Emitter(duration = 300, TimeUnit.MILLISECONDS).max(300),
-                  position = Position.Relative(0.0, 1.0)
+                  position = Position.Relative(0.0, 1.0),
                 ),
                 Party(
                   speed = 30f,
@@ -1942,8 +1973,8 @@ class MainActivity : ComponentActivity() {
                   spread = 45,
                   colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def),
                   emitter = Emitter(duration = 300, TimeUnit.MILLISECONDS).max(300),
-                  position = Position.Relative(1.0, 1.0)
-                )
+                  position = Position.Relative(1.0, 1.0),
+                ),
               )
             }
             KonfettiView(
@@ -1953,11 +1984,11 @@ class MainActivity : ComponentActivity() {
                 object : OnParticleSystemUpdateListener {
                   override fun onParticleSystemEnded(
                     system: nl.dionsegijn.konfetti.core.PartySystem,
-                    activeSystems: Int
+                    activeSystems: Int,
                   ) {
                     if (activeSystems == 0) showPartyBomb = false
                   }
-                }
+                },
             )
           }
         }
@@ -2003,7 +2034,7 @@ class MainActivity : ComponentActivity() {
           android.widget.Toast.makeText(
               this,
               R.string.invalid_playlist_url,
-              android.widget.Toast.LENGTH_SHORT
+              android.widget.Toast.LENGTH_SHORT,
             )
             .show()
         } else {
@@ -2012,7 +2043,9 @@ class MainActivity : ComponentActivity() {
               YouTube.albumSongs(playlistId)
                 .onSuccess { songs ->
                   songs.firstOrNull()?.album?.id?.let { browseId ->
-                    withContext(Dispatchers.Main) { navController.navigate("album/${URLEncoder.encode(browseId, "UTF-8")}") }
+                    withContext(Dispatchers.Main) {
+                      navController.navigate("album/${URLEncoder.encode(browseId, "UTF-8")}")
+                    }
                   }
                 }
                 .onFailure { reportException(it) }
@@ -2022,9 +2055,15 @@ class MainActivity : ComponentActivity() {
           }
         }
       }
-      "browse" -> uri.lastPathSegment?.let { browseId -> navController.navigate("album/${URLEncoder.encode(browseId, "UTF-8")}") }
+      "browse" ->
+        uri.lastPathSegment?.let { browseId ->
+          navController.navigate("album/${URLEncoder.encode(browseId, "UTF-8")}")
+        }
       "channel",
-      "c" -> uri.lastPathSegment?.let { artistId -> navController.navigate("artist/${URLEncoder.encode(artistId, "UTF-8")}") }
+      "c" ->
+        uri.lastPathSegment?.let { artistId ->
+          navController.navigate("artist/${URLEncoder.encode(artistId, "UTF-8")}")
+        }
       "search" -> {
         uri.getQueryParameter("q")?.let {
           navController.navigate("search/${URLEncoder.encode(it, "UTF-8")}")
@@ -2054,7 +2093,7 @@ class MainActivity : ComponentActivity() {
                   playerConnection?.playQueue(
                     YouTubeQueue(
                       WatchEndpoint(videoId = queue.firstOrNull()?.id, playlistId = playlistId),
-                      queue.firstOrNull()?.toMediaMetadata()
+                      queue.firstOrNull()?.toMediaMetadata(),
                     )
                   )
                 }
@@ -2075,7 +2114,7 @@ class MainActivity : ComponentActivity() {
                   playerConnection?.playQueue(
                     YouTubeQueue(
                       WatchEndpoint(videoId = firstItem?.id, playlistId = playlistId),
-                      firstItem?.toMediaMetadata()
+                      firstItem?.toMediaMetadata(),
                     )
                   )
                 }
@@ -2121,8 +2160,42 @@ class MainActivity : ComponentActivity() {
     navController: NavHostController,
   ) {
     if (intent.action == android.provider.MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH) {
-      val query = intent.getStringExtra(android.app.SearchManager.QUERY) ?: return
-      navController.navigate("search/${URLEncoder.encode(query, "UTF-8")}")
+      // A recreated activity gets the same intent again: play it only once.
+      if (intent.getBooleanExtra(EXTRA_VOICE_REQUEST_HANDLED, false)) return
+      intent.putExtra(EXTRA_VOICE_REQUEST_HANDLED, true)
+      val query = intent.getStringExtra(android.app.SearchManager.QUERY)
+      val extras = intent.extras
+      val request = ++voiceRequestCount
+      lifecycleScope.launch {
+        // On a cold start the voice request arrives before the service is connected.
+        val connection = snapshotFlow { playerConnection }.filterNotNull().first()
+        val queue =
+          withContext(Dispatchers.IO) {
+            runCatching {
+                connection.service.mediaLibrarySessionCallback.voiceSearchQueue(query, extras)
+              }
+              .onFailure(::reportException)
+              .getOrNull()
+          }
+        queue?.mediaItems?.getOrNull(queue.startIndex)?.let {
+          connection.service.warmArtwork(it.mediaMetadata.artworkUri)
+        }
+        // A later request already took over.
+        if (request != voiceRequestCount) return@launch
+        when {
+          queue != null ->
+            connection.playQueue(
+              ListQueue(
+                items = queue.mediaItems,
+                startIndex = queue.startIndex,
+                position = queue.startPositionMs.coerceAtLeast(0L),
+              )
+            )
+          // Nothing to play: at least show what was asked for.
+          !query.isNullOrBlank() ->
+            navController.navigate("search/${URLEncoder.encode(query, "UTF-8")}")
+        }
+      }
     }
   }
 }

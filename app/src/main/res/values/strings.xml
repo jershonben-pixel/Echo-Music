@@ -71,6 +71,8 @@
     <string name="episode_details">Episode details</string>
     <string name="episode_chapters">Chapters</string>
     <string name="unfollow">Unfollow</string>
+    <string name="album_label">Album</string>
+    <string name="artist_label">Artist</string>
     <string name="continue_listening">Continue listening</string>
     <string name="episode_played">Played</string>
     <string name="episode_remaining">%s left</string>
@@ -518,6 +520,11 @@
     <string name="spotify_account">Spotify account</string>
     <string name="spotify_waiting_for_login">Waiting for Spotify login</string>
     <string name="filter_spotify">Spotify</string>
+    <string name="in_app_library">In App Library</string>
+    <string name="spotify_empty_title">No imported Spotify content</string>
+    <string name="spotify_empty_desc">No imported Spotify content is currently available.</string>
+    <string name="spotify_sync_success">Synced with Spotify successfully!</string>
+    <string name="spotify_sync_failed">Failed to sync with Spotify.</string>
     <string name="spotify_live_library">Live Spotify Library</string>
     <string name="spotify_live_desc">Stream your Liked Songs and playlists directly without duplicating them into your local database.</string>
     <string name="spotify_connect_account">Connect Spotify Account</string>
@@ -993,6 +1000,9 @@
     <string name="import_custom_font">Import Custom Font</string>
     <string name="typography_preview">Typography Preview</string>
     <string name="preview_text_quote">The quick brown fox jumps over the lazy dog</string>
+    <string name="live_preview">Live Preview</string>
+    <string name="preview_song_title">Last Thing You Need</string>
+    <string name="preview_song_artist">Morgan Wallen</string>
 
 
     <string name="recommendation_source">Recommendation provider</string>

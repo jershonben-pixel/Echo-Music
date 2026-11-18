@@ -64,10 +64,6 @@ import echo.music.iad1tya.LocalPlayerAwareWindowInsets
 import echo.music.iad1tya.R
 import echo.music.iad1tya.constants.AlbumCanvasEnabledKey
 import echo.music.iad1tya.constants.AppLanguageKey
-import echo.music.iad1tya.constants.RecommendationSourceKey
-import echo.music.iad1tya.constants.RecommendationSource
-import echo.music.iad1tya.constants.SpotifySpDcKey
-import kotlinx.coroutines.launch
 import echo.music.iad1tya.constants.ContentCountryKey
 import echo.music.iad1tya.constants.ContentLanguageKey
 import echo.music.iad1tya.constants.CountryCodeToName
@@ -86,6 +82,7 @@ import echo.music.iad1tya.constants.HideYoutubeShortsKey
 import echo.music.iad1tya.constants.IpVersionKey
 import echo.music.iad1tya.constants.LanguageCodeToName
 import echo.music.iad1tya.constants.LyricsProviderOrderKey
+import echo.music.iad1tya.constants.LyricsRomanizeAsMainKey
 import echo.music.iad1tya.constants.LyricsRomanizeBelarusianKey
 import echo.music.iad1tya.constants.LyricsRomanizeBulgarianKey
 import echo.music.iad1tya.constants.LyricsRomanizeChineseKey
@@ -106,6 +103,8 @@ import echo.music.iad1tya.constants.ProxyUsernameKey
 import echo.music.iad1tya.constants.QuickPicks
 import echo.music.iad1tya.constants.QuickPicksKey
 import echo.music.iad1tya.constants.RandomizeHomeOrderKey
+import echo.music.iad1tya.constants.RecommendationSource
+import echo.music.iad1tya.constants.RecommendationSourceKey
 import echo.music.iad1tya.constants.SYSTEM_DEFAULT
 import echo.music.iad1tya.constants.ShowArtistBackgroundVideoKey
 import echo.music.iad1tya.constants.ShowArtistDescriptionKey
@@ -114,6 +113,7 @@ import echo.music.iad1tya.constants.ShowArtistVideoKey
 import echo.music.iad1tya.constants.ShowMonthlyListenersKey
 import echo.music.iad1tya.constants.ShowSpeedDialKey
 import echo.music.iad1tya.constants.SponsorBlockEnabledKey
+import echo.music.iad1tya.constants.SpotifySpDcKey
 import echo.music.iad1tya.constants.SuggestionRegionKey
 import echo.music.iad1tya.constants.SuggestionRegionSlugToName
 import echo.music.iad1tya.constants.TopSize
@@ -131,6 +131,7 @@ import echo.music.iad1tya.utils.PlaybackLogManager
 import echo.music.iad1tya.utils.rememberEnumPreference
 import echo.music.iad1tya.utils.rememberPreference
 import java.net.Proxy
+import kotlinx.coroutines.launch
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,21 +139,24 @@ import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 fun ContentSettings(
   navController: NavController,
   scrollBehavior: TopAppBarScrollBehavior,
-  highlightKey: String? = null
+  highlightKey: String? = null,
 ) {
   val scrollState = androidx.compose.foundation.rememberScrollState()
 
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
 
-
   val (spotifySpDc) = rememberPreference(key = SpotifySpDcKey, defaultValue = "")
-  val (recommendationSource, onRecommendationSourceChange) = rememberEnumPreference(key = RecommendationSourceKey, defaultValue = RecommendationSource.YOUTUBE)
-  
+  val (recommendationSource, onRecommendationSourceChange) =
+    rememberEnumPreference(
+      key = RecommendationSourceKey,
+      defaultValue = RecommendationSource.YOUTUBE,
+    )
+
   LaunchedEffect(spotifySpDc, recommendationSource) {
-      if (spotifySpDc.isBlank() && recommendationSource == RecommendationSource.SPOTIFY) {
-          onRecommendationSourceChange(RecommendationSource.YOUTUBE)
-      }
+    if (spotifySpDc.isBlank() && recommendationSource == RecommendationSource.SPOTIFY) {
+      onRecommendationSourceChange(RecommendationSource.YOUTUBE)
+    }
   }
 
   val (appLanguage, onAppLanguageChange) =
@@ -182,6 +186,8 @@ fun ContentSettings(
     rememberPreference(LyricsRomanizeKyrgyzKey, defaultValue = true)
   val (lyricsRomanizeMacedonian, onLyricsRomanizeMacedonianChange) =
     rememberPreference(LyricsRomanizeMacedonianKey, defaultValue = true)
+  val (lyricsRomanizeAsMain, onLyricsRomanizeAsMainChange) =
+    rememberPreference(LyricsRomanizeAsMainKey, defaultValue = false)
 
   val (contentLanguage, onContentLanguageChange) =
     rememberPreference(key = ContentLanguageKey, defaultValue = "system")
@@ -276,12 +282,12 @@ fun ContentSettings(
         val dialogScrollState = androidx.compose.foundation.rememberScrollState()
         Column(
           modifier = Modifier.fillMaxWidth().verticalScroll(dialogScrollState),
-          verticalArrangement = Arrangement.spacedBy(12.dp)
+          verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
           ExposedDropdownMenuBox(
             expanded = expandedDropdown,
             onExpandedChange = { expandedDropdown = !expandedDropdown },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
           ) {
             OutlinedTextField(
               value = proxyType.name,
@@ -293,11 +299,12 @@ fun ContentSettings(
               },
               colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
               modifier =
-                Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+                Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                  .fillMaxWidth(),
             )
             ExposedDropdownMenu(
               expanded = expandedDropdown,
-              onDismissRequest = { expandedDropdown = false }
+              onDismissRequest = { expandedDropdown = false },
             ) {
               listOf(Proxy.Type.HTTP, Proxy.Type.SOCKS).forEach { type ->
                 DropdownMenuItem(
@@ -305,7 +312,7 @@ fun ContentSettings(
                   onClick = {
                     onProxyTypeChange(type)
                     expandedDropdown = false
-                  }
+                  },
                 )
               }
             }
@@ -315,13 +322,13 @@ fun ContentSettings(
             value = tempProxyUrl,
             onValueChange = { tempProxyUrl = it },
             label = { Text(stringResource(R.string.proxy_url)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
           )
 
           Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
           ) {
             Text(stringResource(R.string.enable_authentication))
             Switch(
@@ -332,7 +339,7 @@ fun ContentSettings(
                   tempProxyUsername = ""
                   tempProxyPassword = ""
                 }
-              }
+              },
             )
           }
 
@@ -342,13 +349,13 @@ fun ContentSettings(
                 value = tempProxyUsername,
                 onValueChange = { tempProxyUsername = it },
                 label = { Text(stringResource(R.string.proxy_username)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
               )
               OutlinedTextField(
                 value = tempProxyPassword,
                 onValueChange = { tempProxyPassword = it },
                 label = { Text(stringResource(R.string.proxy_password)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
               )
             }
           }
@@ -370,7 +377,7 @@ fun ContentSettings(
         TextButton(onClick = { showProxyConfigurationDialog = false }) {
           Text(stringResource(R.string.cancel))
         }
-      }
+      },
     )
   }
 
@@ -386,7 +393,7 @@ fun ContentSettings(
       title = stringResource(R.string.content_language),
       current = contentLanguage,
       values = (listOf(SYSTEM_DEFAULT) + LanguageCodeToName.keys.toList()),
-      valueText = { LanguageCodeToName.getOrElse(it) { stringResource(R.string.system_default) } }
+      valueText = { LanguageCodeToName.getOrElse(it) { stringResource(R.string.system_default) } },
     )
   }
 
@@ -402,7 +409,7 @@ fun ContentSettings(
       title = stringResource(R.string.content_country),
       current = contentCountry,
       values = (listOf(SYSTEM_DEFAULT) + CountryCodeToName.keys.toList()),
-      valueText = { CountryCodeToName.getOrElse(it) { stringResource(R.string.system_default) } }
+      valueText = { CountryCodeToName.getOrElse(it) { stringResource(R.string.system_default) } },
     )
   }
 
@@ -418,7 +425,7 @@ fun ContentSettings(
       title = stringResource(R.string.app_language),
       current = appLanguage,
       values = (listOf(SYSTEM_DEFAULT) + LanguageCodeToName.keys.toList()),
-      valueText = { LanguageCodeToName.getOrElse(it) { stringResource(R.string.system_default) } }
+      valueText = { LanguageCodeToName.getOrElse(it) { stringResource(R.string.system_default) } },
     )
   }
 
@@ -485,7 +492,7 @@ fun ContentSettings(
             ) {
               Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
               ) {
                 Surface(
                   shape = AbsoluteSmoothCornerShape(12.dp, 60),
@@ -494,7 +501,7 @@ fun ContentSettings(
                   Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                   ) {
                     Icon(
                       painter = painterResource(R.drawable.lyrics),
@@ -573,7 +580,7 @@ fun ContentSettings(
           QuickPicks.QUICK_PICKS -> stringResource(R.string.quick_picks)
           QuickPicks.LAST_LISTEN -> stringResource(R.string.last_song_listened)
         }
-      }
+      },
     )
   }
 
@@ -589,14 +596,14 @@ fun ContentSettings(
         Row(
           modifier = Modifier.fillMaxWidth(),
           verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
           Text(tempLength.toInt().toString())
           Slider(
             value = tempLength,
             onValueChange = { tempLength = it },
             valueRange = 1f..100f,
-            steps = 98
+            steps = 98,
           )
         }
       },
@@ -609,7 +616,7 @@ fun ContentSettings(
         ) {
           Text(stringResource(R.string.save))
         }
-      }
+      },
     )
   }
 
@@ -631,7 +638,7 @@ fun ContentSettings(
           IpVersion.IPV4 -> stringResource(R.string.ip_version_ipv4)
           IpVersion.IPV6 -> stringResource(R.string.ip_version_ipv6)
         }
-      }
+      },
     )
   }
 
@@ -639,7 +646,7 @@ fun ContentSettings(
     PlaybackLogsDialog(
       logs = playbackLogs,
       onClear = { PlaybackLogManager.clearLogs() },
-      onDismiss = { showPlaybackLogsDialog = false }
+      onDismiss = { showPlaybackLogsDialog = false },
     )
   }
 
@@ -647,7 +654,7 @@ fun ContentSettings(
     SuggestionRegionSheet(
       currentRegionSlug = suggestionRegion,
       onRegionSelected = { onSuggestionRegionChange(it) },
-      onDismiss = { showSuggestionSheet = false }
+      onDismiss = { showSuggestionSheet = false },
     )
   }
 
@@ -656,7 +663,7 @@ fun ContentSettings(
         LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Horizontal)
       )
       .verticalScroll(scrollState)
-      .padding(horizontal = 16.dp),
+      .padding(horizontal = 16.dp)
   ) {
     Spacer(
       Modifier.windowInsetsPadding(LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Top))
@@ -674,9 +681,18 @@ fun ContentSettings(
             title = { Text("Blocked Artists") },
             description = { Text("Manage hidden artists") },
             customIcon = { Icon(Icons.Default.Block, null) },
-            onClick = { navController.navigate("blocked_artists") }
-          )
-        )
+            onClick = { navController.navigate("blocked_artists") },
+          ),
+          Material3SettingsItem(
+            isHighlighted = (highlightKey == "Disliked Songs"),
+            title = { Text("Disliked Songs") },
+            description = { Text("Manage disliked songs") },
+            customIcon = {
+              Icon(painter = painterResource(R.drawable.thumb_down), contentDescription = null)
+            },
+            onClick = { navController.navigate("disliked_songs") },
+          ),
+        ),
     )
 
     Material3SettingsGroup(
@@ -707,7 +723,7 @@ fun ContentSettings(
                 },
               )
             },
-            onClick = { onForceOpusChange(!forceOpus) }
+            onClick = { onForceOpusChange(!forceOpus) },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == "Enable HTTP/3 (Cronet)"),
@@ -732,7 +748,7 @@ fun ContentSettings(
                 },
               )
             },
-            onClick = { onEnableCronetChange(!enableCronet) }
+            onClick = { onEnableCronetChange(!enableCronet) },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.content_language)),
@@ -745,7 +761,7 @@ fun ContentSettings(
                 }
               )
             },
-            onClick = { showContentLanguageDialog = true }
+            onClick = { showContentLanguageDialog = true },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.content_country)),
@@ -758,7 +774,7 @@ fun ContentSettings(
                 }
               )
             },
-            onClick = { showContentCountryDialog = true }
+            onClick = { showContentCountryDialog = true },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == "Suggestions Region"),
@@ -767,7 +783,7 @@ fun ContentSettings(
             description = {
               Text(SuggestionRegionSlugToName.getOrElse(suggestionRegion) { "Global Charts" })
             },
-            onClick = { showSuggestionSheet = true }
+            onClick = { showSuggestionSheet = true },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.hide_explicit)),
@@ -785,12 +801,12 @@ fun ContentSettings(
                         id = if (hideExplicit) R.drawable.check else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
-            onClick = { onHideExplicitChange(!hideExplicit) }
+            onClick = { onHideExplicitChange(!hideExplicit) },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.hide_video_songs)),
@@ -808,12 +824,12 @@ fun ContentSettings(
                         id = if (hideVideoSongs) R.drawable.check else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
-            onClick = { onHideVideoSongsChange(!hideVideoSongs) }
+            onClick = { onHideVideoSongsChange(!hideVideoSongs) },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.hide_youtube_shorts)),
@@ -831,12 +847,12 @@ fun ContentSettings(
                         id = if (hideYoutubeShorts) R.drawable.check else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
-            onClick = { onHideYoutubeShortsChange(!hideYoutubeShorts) }
+            onClick = { onHideYoutubeShortsChange(!hideYoutubeShorts) },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.content_sponsor_block)),
@@ -854,14 +870,14 @@ fun ContentSettings(
                         id = if (sponsorBlockEnabled) R.drawable.check else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
-            onClick = { onSponsorBlockEnabledChange(!sponsorBlockEnabled) }
-          )
-        )
+            onClick = { onSponsorBlockEnabledChange(!sponsorBlockEnabled) },
+          ),
+        ),
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -887,14 +903,14 @@ fun ContentSettings(
                         id = if (albumCanvasEnabled) R.drawable.check else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
-            onClick = { onAlbumCanvasEnabledChange(!albumCanvasEnabled) }
+            onClick = { onAlbumCanvasEnabledChange(!albumCanvasEnabled) },
           )
-        )
+        ),
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -914,10 +930,10 @@ fun ContentSettings(
                 context.startActivity(
                   Intent(
                     Settings.ACTION_APP_LOCALE_SETTINGS,
-                    "package:${context.packageName}".toUri()
+                    "package:${context.packageName}".toUri(),
                   )
                 )
-              }
+              },
             )
           } else {
             Material3SettingsItem(
@@ -931,10 +947,10 @@ fun ContentSettings(
                   }
                 )
               },
-              onClick = { showAppLanguageDialog = true }
+              onClick = { showAppLanguageDialog = true },
             )
           }
-        )
+        ),
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -958,7 +974,7 @@ fun ContentSettings(
                   }
                 )
               },
-              onClick = { showIpVersionDialog = true }
+              onClick = { showIpVersionDialog = true },
             )
           )
           add(
@@ -978,12 +994,12 @@ fun ContentSettings(
                           id = if (proxyEnabled) R.drawable.check else R.drawable.close
                         ),
                       contentDescription = null,
-                      modifier = Modifier.size(SwitchDefaults.IconSize)
+                      modifier = Modifier.size(SwitchDefaults.IconSize),
                     )
-                  }
+                  },
                 )
               },
-              onClick = { onProxyEnabledChange(!proxyEnabled) }
+              onClick = { onProxyEnabledChange(!proxyEnabled) },
             )
           )
           if (proxyEnabled) {
@@ -993,11 +1009,11 @@ fun ContentSettings(
                 icon = painterResource(R.drawable.settings),
                 title = { Text(stringResource(R.string.config_proxy)) },
                 description = { Text(stringResource(R.string.config_proxy_desc)) },
-                onClick = { showProxyConfigurationDialog = true }
+                onClick = { showProxyConfigurationDialog = true },
               )
             )
           }
-        }
+        },
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -1042,9 +1058,9 @@ fun ContentSettings(
                           else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
             onClick = {
@@ -1065,9 +1081,39 @@ fun ContentSettings(
               onLyricsRomanizeBelarusianChange(checked)
               onLyricsRomanizeKyrgyzChange(checked)
               onLyricsRomanizeMacedonianChange(checked)
-            }
-          )
-        )
+            },
+          ),
+          Material3SettingsItem(
+            isHighlighted = (highlightKey == stringResource(R.string.lyrics_romanize_as_main)),
+            icon = painterResource(R.drawable.language_korean_latin),
+            title = { Text(stringResource(R.string.lyrics_romanize_as_main)) },
+            description = { Text(stringResource(R.string.lyrics_romanize_as_main_desc)) },
+            trailingContent = {
+              Switch(
+                checked = lyricsRomanizeAsMain,
+                onCheckedChange = onLyricsRomanizeAsMainChange,
+                thumbContent = {
+                  Icon(
+                    painter =
+                      painterResource(
+                        id = if (lyricsRomanizeAsMain) R.drawable.check else R.drawable.close
+                      ),
+                    contentDescription = null,
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
+                  )
+                },
+              )
+            },
+            onClick = { onLyricsRomanizeAsMainChange(!lyricsRomanizeAsMain) },
+          ),
+          Material3SettingsItem(
+            isHighlighted = (highlightKey == stringResource(R.string.lyrics_provider_priority)),
+            icon = painterResource(R.drawable.lyrics),
+            title = { Text(stringResource(R.string.lyrics_provider_priority)) },
+            description = { Text(stringResource(R.string.lyrics_provider_priority_desc)) },
+            onClick = { showProviderPriorityDialog = true },
+          ),
+        ),
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -1084,25 +1130,32 @@ fun ContentSettings(
             description = {
               Text(
                 when (recommendationSource) {
-                  RecommendationSource.YOUTUBE -> stringResource(R.string.recommendation_source_youtube)
-                  RecommendationSource.SPOTIFY -> stringResource(R.string.recommendation_source_spotify)
+                  RecommendationSource.YOUTUBE ->
+                    stringResource(R.string.recommendation_source_youtube)
+                  RecommendationSource.SPOTIFY ->
+                    stringResource(R.string.recommendation_source_spotify)
                 }
               )
             },
             onClick = {
               if (recommendationSource == RecommendationSource.YOUTUBE) {
                 if (spotifySpDc.isBlank()) {
-                   // Cannot switch to Spotify if not logged in
-                   scope.launch {
-                       android.widget.Toast.makeText(context, R.string.spotify_recommendation_login_required, android.widget.Toast.LENGTH_LONG).show()
-                   }
+                  // Cannot switch to Spotify if not logged in
+                  scope.launch {
+                    android.widget.Toast.makeText(
+                        context,
+                        R.string.spotify_recommendation_login_required,
+                        android.widget.Toast.LENGTH_LONG,
+                      )
+                      .show()
+                  }
                 } else {
-                   onRecommendationSourceChange(RecommendationSource.SPOTIFY)
+                  onRecommendationSourceChange(RecommendationSource.SPOTIFY)
                 }
               } else {
                 onRecommendationSourceChange(RecommendationSource.YOUTUBE)
               }
-            }
+            },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.randomize_home_order)),
@@ -1120,19 +1173,19 @@ fun ContentSettings(
                         id = if (randomizeHomeOrder) R.drawable.check else R.drawable.close
                       ),
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
                   )
-                }
+                },
               )
             },
-            onClick = { onRandomizeHomeOrderChange(!randomizeHomeOrder) }
+            onClick = { onRandomizeHomeOrderChange(!randomizeHomeOrder) },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.top_length)),
             icon = painterResource(R.drawable.trending_up),
             title = { Text(stringResource(R.string.top_length)) },
             description = { Text(lengthTop) },
-            onClick = { showTopLengthDialog = true }
+            onClick = { showTopLengthDialog = true },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == stringResource(R.string.set_quick_picks)),
@@ -1146,7 +1199,7 @@ fun ContentSettings(
                 }
               )
             },
-            onClick = { showQuickPicksDialog = true }
+            onClick = { showQuickPicksDialog = true },
           ),
           Material3SettingsItem(
             isHighlighted = (highlightKey == "Speed Dial"),
@@ -1160,13 +1213,13 @@ fun ContentSettings(
                 colors =
                   SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary
-                  )
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                  ),
               )
             },
-            onClick = { onShowSpeedDialChange(!showSpeedDial) }
-          )
-        )
+            onClick = { onShowSpeedDialChange(!showSpeedDial) },
+          ),
+        ),
     )
 
     Spacer(modifier = Modifier.height(16.dp))
@@ -1190,6 +1243,6 @@ fun ContentSettings(
           contentDescription = null,
         )
       }
-    }
+    },
   )
 }

@@ -33,8 +33,8 @@ android {
     applicationId = "com.jershonzablov.djcapuchino"
     minSdk = 26
     targetSdk = 36
-    versionCode = 167
-    versionName = "1.4.6"
+    versionCode = 168
+    versionName = "1.4.7"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables.useSupportLibrary = true
@@ -314,8 +314,8 @@ dependencies {
 
   implementation(libs.hilt)
   ksp(libs.hilt.compiler)
-  ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.20")
-  annotationProcessor("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.20")
+  ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.21")
+  annotationProcessor("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.21")
 
   implementation(project(":innertube"))
   implementation("com.github.MetrolistGroup.innertubex:innertubex-android:v0.7.0")
