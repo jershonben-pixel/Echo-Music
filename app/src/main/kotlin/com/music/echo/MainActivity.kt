@@ -530,11 +530,17 @@ class MainActivity : ComponentActivity() {
               modifier = Modifier.fillMaxWidth().padding(32.dp)
             ) {
               Image(
-                painter = painterResource(R.drawable.splash_logo),
-                contentDescription = "DJ Capuchino",
-                modifier = Modifier.fillMaxWidth(),
-                contentScale = ContentScale.FillWidth
+                painter = painterResource(R.drawable.splash_foto),
+                contentDescription = "Jershon",
+                modifier = Modifier.fillMaxWidth().height(320.dp),
+                contentScale = ContentScale.Crop
               )
+              Image(
+                  painter = painterResource(R.drawable.splash_logo),
+                contentDescription = "DJ Capuchino",
+                modifier = Modifier.fillMaxWidth(0.55f).padding(top = 16.dp),
+                contentScale = ContentScale.FillWidth
+            )
               Text(
                 text = "DJ Capuchino Music",
                 color = Color.White,
@@ -542,6 +548,12 @@ class MainActivity : ComponentActivity() {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 24.dp)
               )
+              Text(
+                  text = "Creado por Ing. Jershon",
+                color = Color.White,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
             }
           }
         }
