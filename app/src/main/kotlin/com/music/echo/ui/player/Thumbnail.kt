@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -548,7 +549,7 @@ private fun ThumbnailItem(
   playerBackground: PlayerBackgroundStyle = PlayerBackgroundStyle.DEFAULT,
   modifier: Modifier = Modifier,
 ) {
-  val rotatingThumbnail by rememberPreference(RotatingThumbnailKey, defaultValue = false)
+  val rotatingThumbnail by rememberPreference(RotatingThumbnailKey, defaultValue = true)
   val isPlaying by playerConnection.isPlaying.collectAsState()
   val isCurrentItem = item.mediaId == currentMediaId
 
@@ -651,6 +652,13 @@ private fun ThumbnailItem(
     ) {
       if (hidePlayerThumbnail) {
         HiddenThumbnailPlaceholder(textBackgroundColor = textBackgroundColor)
+      } else if (rotatingThumbnail && isCurrentItem) {
+        Image(
+          painter = painterResource(id = R.drawable.dog_face),
+          contentDescription = null,
+          modifier = Modifier.fillMaxSize().graphicsLayer { rotationZ = rotation },
+          contentScale = ContentScale.Crop,
+        )
       } else {
         val artworkUriToUse =
           if (item.mediaId == currentMediaId && !currentMediaThumbnail.isNullOrBlank()) {

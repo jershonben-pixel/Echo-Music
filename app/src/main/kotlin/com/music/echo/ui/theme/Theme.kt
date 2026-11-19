@@ -27,7 +27,7 @@ import echo.music.iad1tya.constants.AppFont
 import echo.music.iad1tya.constants.SelectedFontKey
 import echo.music.iad1tya.utils.rememberPreference
 
-val DefaultThemeColor = Color(0xFFED5564)
+val DefaultThemeColor = Color(0xFFFF2E9A)
 
 @Composable
 fun echomusicTheme(
@@ -64,8 +64,7 @@ fun echomusicTheme(
       }
     }
 
-  val useSystemDynamicColor =
-    !isMonochrome && (themeColor == DefaultThemeColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+  val useSystemDynamicColor = false
 
   val baseColorScheme =
     if (isMonochrome) {
