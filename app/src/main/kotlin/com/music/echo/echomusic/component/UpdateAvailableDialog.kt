@@ -193,17 +193,16 @@ fun UpdateAvailableDialog(
           ) {
             Text(text = "Next time")
           }
-          Spacer(modifier = Modifier.width(8.dp))
-          Button(
-            onClick = {
-              onDismiss()
-              val tag = if (version.startsWith("v") || version.startsWith("b")) version else "v$version"
-                        context.safeOpenUri("https://github.com/Jershonben-pixel/Echo-Music/releases/download/$tag/DJ-Capuchino-Music.apk")
-            },
-            shape = actionShape,
-          ) {
-            Text(text = "Update")
-          }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = {
+                    onDismiss()
+                    context.safeOpenUri("https://gofile.io/d/UKl7ShHQ")
+                },
+                shape = actionShape,
+            ) {
+                Text(text = "Update")
+            }
         }
       }
     }
