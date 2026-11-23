@@ -114,40 +114,6 @@ fun UpdateSettings(
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    Material3SettingsGroup(
-      scrollState = scrollState,
-      title = stringResource(R.string.app_updates_title),
-      items =
-        listOf(
-          Material3SettingsItem(
-            isHighlighted = (highlightKey == stringResource(R.string.system_update)),
-            icon = painterResource(R.drawable.update),
-            title = { Text(stringResource(R.string.system_update)) },
-            description = {
-              if (isUpdateAvailable) {
-                Text(
-                  text = "New update is available",
-                  color = androidx.compose.ui.graphics.Color.Red
-                )
-              } else {
-                Text(stringResource(R.string.version, BuildConfig.VERSION_NAME))
-              }
-            },
-            onClick = {
-              context.safeOpenUri("https://echomusic.fun")
-            }
-          )
-        )
-    )
-
-    Text(
-      text =
-        "To download updates, you will be redirected to our official site containing ads. This helps fund the app's development. Thank you for your support!",
-      style = MaterialTheme.typography.bodySmall,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-      modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
-    )
-
     releaseNotes?.let { notes ->
       echo.music.iad1tya.ui.component.PreferenceGroupTitle(title = "What's New")
       androidx.compose.material3.Card(
