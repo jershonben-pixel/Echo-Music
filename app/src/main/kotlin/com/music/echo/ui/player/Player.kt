@@ -1472,6 +1472,11 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize(),
                       )
                     }
+                    Image(
+                      painter = painterResource(R.drawable.watermark_tv),
+                      contentDescription = null,
+                      modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(64.dp),
+                    )
                   }
 
                   Box(

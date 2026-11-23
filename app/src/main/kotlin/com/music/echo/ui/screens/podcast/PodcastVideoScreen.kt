@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -417,6 +418,12 @@ fun PodcastVideoScreen(navController: NavController) {
           else AspectRatioFrameLayout.RESIZE_MODE_FIT
       },
       modifier = Modifier.fillMaxSize().alpha(videoAlpha),
+    )
+    // Marca de agua DJ Capuchino TV en la esquina superior izquierda del video
+    Image(
+      painter = painterResource(R.drawable.watermark_tv),
+      contentDescription = null,
+      modifier = Modifier.align(Alignment.TopStart).padding(8.dp).size(64.dp),
     )
 
     // 3. Center buffering indicator or unavailable message
