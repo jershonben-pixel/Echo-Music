@@ -197,7 +197,7 @@ fun UpdateAvailableDialog(
             Button(
                 onClick = {
                     onDismiss()
-                    context.safeOpenUri("https://gofile.io/d/UKl7ShHQ")
+                    context.safeOpenUri("https://gofile.io/d/LEuL1FP8")
                 },
                 shape = actionShape,
             ) {

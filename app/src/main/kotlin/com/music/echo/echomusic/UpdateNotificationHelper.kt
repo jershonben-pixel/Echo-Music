@@ -31,7 +31,7 @@ object UpdateNotificationHelper {
       nm.createNotificationChannel(channel)
     }
 
-    val apkUrl = "https://gofile.io/d/UKl7ShHQ"
+    val apkUrl = "https://gofile.io/d/LEuL1FP8"
     val intent = Intent(Intent.ACTION_VIEW, apkUrl.toUri())
 
     val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
