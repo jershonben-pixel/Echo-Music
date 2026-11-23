@@ -126,7 +126,7 @@ fun ExtensionSettingsScreen(
                 ),
                 Material3SettingsItem(
                     title = { Text("High Quality (320kbps) Music") },
-                    description = { Text("Visit 320kbps.echomusic.fun for setup guide") },
+                    description = { Text("Visit github.com/Jershonben-pixel/Echo-Music for setup guide") },
                     icon = painterResource(R.drawable.ic_hq),
                     trailingContent = {
                         Icon(
@@ -138,7 +138,7 @@ fun ExtensionSettingsScreen(
                     },
                     onClick = {
                         try {
-                            uriHandler.openUri("https://320kbps.echomusic.fun/")
+                            uriHandler.openUri("https://github.com/Jershonben-pixel/Echo-Music/")
                         } catch (_: Exception) {}
                     }
                 )

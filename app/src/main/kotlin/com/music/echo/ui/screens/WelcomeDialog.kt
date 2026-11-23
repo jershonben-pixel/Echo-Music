@@ -80,7 +80,7 @@ fun WelcomeDialog(onDismissRequest: () -> Unit) {
           )
         }
 
-        WelcomeSectionCard(title = "Support Echo") {
+        WelcomeSectionCard(title = "Support DJ Capuchino") {
           WelcomeActionRow(
             icon = painterResource(R.drawable.coffee),
             title = "Buy Me a Coffee",
@@ -107,19 +107,11 @@ fun WelcomeDialog(onDismissRequest: () -> Unit) {
           )
         }
 
-        WelcomeSectionCard(title = "Community") {
-          WelcomeActionRow(
-            icon = painterResource(R.drawable.ic_discord_new),
-            title = "Discord",
-            subtitle = "discord.gg/Xt5hgsJJuA",
-            onClick = { uriHandler.openUri("https://discord.gg/Xt5hgsJJuA") }
-          )
-        }
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Button(
-          onClick = { uriHandler.openUri("https://github.com/EchoMusicApp/Echo-Music") },
+          onClick = { uriHandler.openUri("https://github.com/Jershonben-pixel/Echo-Music") },
           modifier = Modifier.fillMaxWidth().height(50.dp),
           shape = RoundedCornerShape(16.dp),
           colors =

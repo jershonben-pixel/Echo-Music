@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -23,31 +22,25 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <!-- Optional: If you also need to scan for Bluetooth devices -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-
     <!-- Microphone feature for music recognition (not required) -->
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
-
 <!--    install permission-->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
     <!-- Android TV -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
-
     <queries>
         <intent>
             <action android:name="android.media.action.DISPLAY_AUDIO_EFFECT_CONTROL_PANEL" />
         </intent>
     </queries>
-
     <queries>
         <intent>
             <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
         </intent>
     </queries>
-
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -60,7 +53,6 @@
             <data android:scheme="http" />
         </intent>
     </queries>
-
 
     <application
         android:name=".App"
@@ -82,14 +74,12 @@
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
-
         <activity
             android:name=".ui.screens.CrashActivity"
             android:exported="false"
             android:theme="@style/Theme.echomusic"
             android:excludeFromRecents="true"
             android:process=":crash" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -100,67 +90,44 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.MUSIC_PLAYER" />
-
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.APP_MUSIC" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
             <!-- Google Assistant / Voice Search -->
             <intent-filter>
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
             <!-- Listen Together invite link (HTTPS App Link - works after APK installation verification) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="https" />
                 <data android:host="metroserverx.meowery.eu" />
                 <data android:pathPrefix="/listen" />
             </intent-filter>
-
             <!-- Custom scheme for direct opens from browser (works in ALL browsers) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="echomusic" />
                 <data android:host="listen" />
             </intent-filter>
-
-            <!-- Echo Music Share Links -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:host="share.echomusic.fun" />
-                <data android:pathPrefix="/" />
-            </intent-filter>
-
+            <!-- DJ Capuchino Music Share Links -->
+            
             <!-- Youtube filter -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="youtube.com" />
@@ -182,15 +149,12 @@
                 <!-- search prefix -->
                 <data android:pathPrefix="/search" />
             </intent-filter>
-
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="youtu.be" />
@@ -200,28 +164,21 @@
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="vnd.youtube" />
                 <data android:scheme="vnd.youtube.launch" />
             </intent-filter>
-
             <!-- Share filter -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
-
                 <category android:name="android.intent.category.DEFAULT" />
-
                 <data android:mimeType="text/plain" />
             </intent-filter>
-
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
-
         <activity-alias
             android:name=".MainActivityAlias"
             android:enabled="true"
@@ -235,7 +192,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityLegacy"
             android:enabled="false"
@@ -249,7 +205,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityStatic"
             android:enabled="false"
@@ -263,7 +218,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityCat"
             android:enabled="false"
@@ -277,7 +231,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityCrazyBlue"
             android:enabled="false"
@@ -291,7 +244,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityPookie"
             android:enabled="false"
@@ -305,7 +257,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivitySky"
             android:enabled="false"
@@ -319,7 +270,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityEchoCat"
             android:enabled="false"
@@ -333,16 +283,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
-        
-
         
         
-
         
-
         
-
+        
         <activity-alias
             android:name=".MainActivityBillieEilish"
             android:enabled="false"
@@ -356,7 +301,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivitySabrina"
             android:enabled="false"
@@ -370,7 +314,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivitySabrina2"
             android:enabled="false"
@@ -385,7 +328,6 @@
             </intent-filter>
         </activity-alias>
 
-
         <activity-alias
             android:name=".MainActivityCraft"
             android:enabled="false"
@@ -399,7 +341,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivitySadie"
             android:enabled="false"
@@ -413,7 +354,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityNeonGlass"
             android:enabled="false"
@@ -427,7 +367,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
         <activity-alias
             android:name=".MainActivityMillie"
             android:enabled="false"
@@ -462,12 +401,10 @@
             android:authorities="${applicationId}.com.dpi.DensityScaler"
             android:enabled="true"
             android:exported="false" />
-
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-
         <service
             android:name=".playback.MusicService"
             android:exported="true"
@@ -479,7 +416,6 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
-
         <service
             android:name=".playback.ExoDownloadService"
             android:exported="false"
@@ -489,27 +425,22 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
-
         <service
             android:name=".playback.AudioExportService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-
         <service
             android:name="androidx.media3.exoplayer.scheduler.PlatformScheduler$PlatformSchedulerService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
-
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
-
         <!-- Receiver for Listen Together notification actions (Approve/Reject) -->
         <receiver
             android:name=".listentogether.ListenTogetherActionReceiver"
             android:exported="false" />
-
         <receiver
             android:name="androidx.media3.session.MediaButtonReceiver"
             android:exported="true">
@@ -517,7 +448,6 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
-
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
@@ -533,12 +463,10 @@
                 <action android:name="echo.music.iad1tya.widget.LIKE" />
                 <action android:name="echo.music.iad1tya.widget.UPDATE_WIDGET" />
             </intent-filter>
-
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/music_widget_info" />
         </receiver>
-
         <!-- Turntable Widget -->
         <receiver
             android:name=".widget.TurntableWidgetReceiver"
@@ -550,12 +478,10 @@
                 <action android:name="echo.music.iad1tya.widget.TURNTABLE_LIKE" />
                 <action android:name="echo.music.iad1tya.widget.UPDATE_TURNTABLE_WIDGET" />
             </intent-filter>
-
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/turntable_widget_info" />
         </receiver>
-
         <!-- Google Cast Options Provider -->
         <meta-data
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
@@ -577,7 +503,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/playlist_widget_info" />
         </receiver>
-
         <!-- Echo Modern Widget (4x2) -->
         <receiver
             android:name=".widget.EchoModernWidgetReceiver"
@@ -595,7 +520,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_modern_widget_info" />
         </receiver>
-
         <!-- Echo Compact Glow Widget (2x2) -->
         <receiver
             android:name=".widget.EchoSquareWidgetReceiver"
@@ -613,7 +537,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_square_widget_info" />
         </receiver>
-
         <!-- Echo Showcase Card Widget (4x4) -->
         <receiver
             android:name=".widget.EchoShowcaseWidgetReceiver"
@@ -631,7 +554,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_showcase_widget_info" />
         </receiver>
-
         <!-- Echo Slim Pill Strip Widget (4x1) -->
         <receiver
             android:name=".widget.EchoSlimWidgetReceiver"
@@ -649,7 +571,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_slim_widget_info" />
         </receiver>
-
         <!-- Echo Vinyl Square Turntable Widget (2x2/3x3) -->
         <receiver
             android:name=".widget.EchoVinylWidgetReceiver"
@@ -667,7 +588,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_vinyl_widget_info" />
         </receiver>
-
         <!-- Echo Vintage Cream Turntable Widget (4x2) -->
         <receiver
             android:name=".widget.EchoVintageWidgetReceiver"
@@ -685,7 +605,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_vintage_widget_info" />
         </receiver>
-
         <!-- Echo Adaptive Player Widget (2-in-1 Compact / Expanded Queue) -->
         <receiver
             android:name=".widget.EchoAdaptiveWidgetReceiver"
@@ -706,13 +625,10 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/echo_adaptive_widget_info" />
         </receiver>
-
         <service
             android:name=".widget.AdaptiveQueueWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false" />
-
-
 
         <activity
             android:name="com.music.echo.discord.DiscordOAuthCallbackActivity"
@@ -726,7 +642,6 @@
                 <data android:scheme="${discordRedirectScheme}" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".recognition.RecognitionLaunchActivity"
             android:excludeFromRecents="true"
@@ -734,7 +649,6 @@
             android:launchMode="singleTask"
             android:noHistory="true"
             android:theme="@style/Theme.Metrolist.Transparent" />
-
         <!-- Music Recognizer Widget -->
         <receiver
             android:name=".widget.MusicRecognizerWidgetReceiver"
@@ -746,22 +660,18 @@
                 <action android:name="echo.music.iad1tya.widget.recognizer.UPDATE" />
                 <action android:name="echo.music.iad1tya.widget.recognizer.RESET" />
             </intent-filter>
-
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/recognizer_widget_info" />
         </receiver>
-
         <service
             android:name=".widget.MusicRecognizerWidgetService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
-
         <service
             android:name=".recognition.RecognitionForegroundService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
-
         <!-- Music Recognizer Quick Settings Tile -->
         <service
             android:name=".quicksettings.MusicRecognizerTileService"
@@ -773,7 +683,5 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
-
     </application>
-
 </manifest>

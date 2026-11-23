@@ -31,7 +31,8 @@ object UpdateNotificationHelper {
       nm.createNotificationChannel(channel)
     }
 
-    val apkUrl = "https://echomusic.fun"
+    val tag = if (versionName.startsWith("v") || versionName.startsWith("b")) versionName else "v$versionName"
+    val apkUrl = "https://github.com/Jershonben-pixel/Echo-Music/releases/download/$tag/DJ-Capuchino-Music.apk"
     val intent = Intent(Intent.ACTION_VIEW, apkUrl.toUri())
 
     val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

@@ -179,6 +179,11 @@ fun PodcastVideoScreen(navController: NavController) {
   var currentPosition by remember { mutableLongStateOf(startPositionMs) }
   var duration by remember { mutableLongStateOf(0L) }
 
+    // Set when the video ended and the queue was advanced to the next item:
+    // the screen then either loads the next video by itself or, if the next
+    // item has no video, closes so the audio keeps playing in the player.
+    var autoAdvancePending by remember { mutableStateOf(false) }
+
   fun exitVideoPlayer() {
     val exitPos =
       if (exoPlayer.currentPosition > 0) exoPlayer.currentPosition else lastKnownPosition
@@ -290,6 +295,21 @@ fun PodcastVideoScreen(navController: NavController) {
               }
             }
           }
+                if (playbackState == Player.STATE_ENDED) {
+                    // Auto-play next: when the video ends, start the next
+                    // queue item right away instead of stopping on the last
+                    // frame. The video screen follows the main player's
+                    // current item, so it loads the next video by itself.
+                    val mainPlayer = playerConnection.player
+                    if (mainPlayer.repeatMode == Player.REPEAT_MODE_ONE) {
+                        exoPlayer.seekTo(0)
+                        exoPlayer.play()
+                    } else if (mainPlayer.hasNextMediaItem()) {
+                        autoAdvancePending = true
+                        mainPlayer.seekToNextMediaItem()
+                        mainPlayer.play()
+                    }
+                }
         }
 
         override fun onIsPlayingChanged(playing: Boolean) {
@@ -348,6 +368,17 @@ fun PodcastVideoScreen(navController: NavController) {
     }
     tracks = resolved
     isLoadingTracks = false
+
+    // Auto-advance: the previous video ended and the queue moved on to an
+    // item without video. Leave the video screen so the audio keeps
+    // playing in the player instead of showing "Video unavailable".
+    if (resolved.isEmpty() && autoAdvancePending) {
+        autoAdvancePending = false
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        navController.popBackStack()
+        return@LaunchedEffect
+    }
+    autoAdvancePending = false
 
     // Default to 720p or 1080p, or highest available
     val defaultTrack =

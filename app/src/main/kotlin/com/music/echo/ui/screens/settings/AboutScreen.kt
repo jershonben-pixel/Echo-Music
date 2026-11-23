@@ -64,7 +64,7 @@ fun AboutScreen(
   LaunchedEffect(Unit) {
     withContext(Dispatchers.IO) {
       try {
-        val url = java.net.URL("https://api.github.com/repos/EchoMusicApp/Echo-Music/contributors")
+        val url = java.net.URL("https://api.github.com/repos/Jershonben-pixel/Echo-Music/contributors")
         val json = url.openStream().bufferedReader().use { it.readText() }
         val array = JSONArray(json)
         val list = mutableListOf<Contributor>()
@@ -222,28 +222,14 @@ fun AboutScreen(
         )
       }
 
-      item {
-        Material3SettingsGroup(
-          title = "Community",
-          items =
-            listOf(
-              Material3SettingsItem(
-                icon = painterResource(R.drawable.ic_discord_new),
-                title = { Text("Discord") },
-                description = { Text("discord.gg/Xt5hgsJJuA") },
-                onClick = { uriHandler.openUri("https://discord.gg/Xt5hgsJJuA") }
-              )
-            )
-        )
-      }
 
       /* item {
           AboutSectionCard(title = "App") {
               AboutActionRow(
                   icon = painterResource(R.drawable.github),
                   title = "GitHub",
-                  subtitle = "EchoMusicApp/Echo-Music",
-                  onClick = { uriHandler.openUri("https://github.com/EchoMusicApp/Echo-Music") },
+                  subtitle = "Jershonben-pixel/Echo-Music",
+                  onClick = { uriHandler.openUri("https://github.com/Jershonben-pixel/Echo-Music") },
               )
               AboutDivider()
               AboutActionRow(
@@ -256,8 +242,8 @@ fun AboutScreen(
               AboutActionRow(
                   icon = painterResource(R.drawable.ic_telegram_new),
                   title = "Telegram",
-                  subtitle = "t.me/EchoMusicApp",
-                  onClick = { uriHandler.openUri("https://t.me/EchoMusicApp") },
+                  subtitle = "t.me/Jershonben-pixel",
+                  onClick = { uriHandler.openUri("https://t.me/Jershonben-pixel") },
               )
           }
       } */

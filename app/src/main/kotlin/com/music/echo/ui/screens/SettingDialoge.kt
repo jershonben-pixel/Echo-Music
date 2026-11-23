@@ -75,7 +75,7 @@ fun SettingDialoge(
       verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
       // Header
-      // Removed Echo Music text
+      // Removed DJ Capuchino Music text
 
       // Account Group
       Material3SettingsGroup(
@@ -144,7 +144,7 @@ fun SettingDialoge(
               Material3SettingsItem(
                 title = {
                   Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Echo Wrapped")
+                    Text("DJ Capuchino Wrapped")
                     Spacer(Modifier.width(8.dp))
                     Surface(
                       color = MaterialTheme.colorScheme.primaryContainer,

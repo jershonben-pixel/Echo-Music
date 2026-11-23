@@ -197,7 +197,8 @@ fun UpdateAvailableDialog(
           Button(
             onClick = {
               onDismiss()
-              context.safeOpenUri("https://echomusic.fun")
+              val tag = if (version.startsWith("v") || version.startsWith("b")) version else "v$version"
+                        context.safeOpenUri("https://github.com/Jershonben-pixel/Echo-Music/releases/download/$tag/DJ-Capuchino-Music.apk")
             },
             shape = actionShape,
           ) {

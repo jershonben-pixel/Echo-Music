@@ -193,7 +193,7 @@ constructor(
   val aiRecommendedPlaylist =
     database
       .playlistsByNameAsc()
-      .map { playlists -> playlists.find { it.playlist.name == "From your taste by Echo Music" } }
+      .map { playlists -> playlists.find { it.playlist.name == "From your taste by DJ Capuchino Music" } }
       .flatMapLatest { playlist ->
         if (playlist != null && playlist.songCount > 0) {
           database.playlistSongs(playlist.playlist.id).map { playlistSongs ->
